@@ -17,3 +17,27 @@ sealed interface StatusUiSiswa {
     object Loading : StatusUiSiswa
 }
 
+class HomeViewModel(private val repositorySiswa: RepositorySiswa) : ViewModel() {
+
+    // Menggunakan StateFlow (rekomendasi terbaru) untuk menangani state di ViewModel
+    private val _statusUiSiswa = MutableStateFlow<StatusUiSiswa>(StatusUiSiswa.Loading)
+    val statusUiSiswa: StateFlow<StatusUiSiswa> = _statusUiSiswa.asStateFlow()
+
+    init {
+        loadSiswa()
+    }
+
+    fun loadSiswa() {
+        viewModelScope.launch {
+            _statusUiSiswa.value = StatusUiSiswa.Loading
+            _statusUiSiswa.value = try {
+                val data = repositorySiswa.getDataSiswa()
+                StatusUiSiswa.Success(data)
+            } catch (e: IOException) {
+                StatusUiSiswa.Error
+            } catch (e: Exception) {
+                StatusUiSiswa.Error
+            }
+        }
+    }
+}
